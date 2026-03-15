@@ -23,5 +23,15 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_BASE_URL": "http://localhost:5000/api",
+    "VITE_SITE_NAME": "Nepal Movie"
+  },
+  "build": {
+    "env": {
+      "VITE_API_BASE_URL": "@vite_api_base_url",
+      "VITE_SITE_NAME": "Nepal Movie"
+    }
+  }
 }

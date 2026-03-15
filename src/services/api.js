@@ -3,6 +3,14 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🌍 Environment:', import.meta.env.MODE);
+
+// Check if we're in production and still using localhost
+if (import.meta.env.PROD && API_BASE_URL.includes('localhost')) {
+  console.error('🚨 PRODUCTION ERROR: Frontend is trying to connect to localhost!');
+  console.error('💡 Fix: Set VITE_API_BASE_URL environment variable in Vercel to your backend URL');
+  console.error('📖 Guide: Check VERCEL_SETUP.md for detailed instructions');
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
