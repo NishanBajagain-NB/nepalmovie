@@ -10,7 +10,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'http://172.237.44.29:5000',
         changeOrigin: true,
         secure: false,
       }
@@ -29,5 +29,9 @@ export default defineConfig({
         }
       }
     }
+  },
+  define: {
+    // Define environment variables for build time
+    __BACKEND_URL__: JSON.stringify(process.env.VITE_API_BASE_URL || 'http://172.237.44.29:5000/api')
   }
 })

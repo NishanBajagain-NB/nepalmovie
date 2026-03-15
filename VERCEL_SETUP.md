@@ -3,28 +3,15 @@
 ## 🚨 Current Issue
 The frontend on Vercel cannot connect to the backend because it's trying to connect to `http://localhost:5000/api` which only works locally.
 
+## ✅ Your Backend Details
+- **Backend IP**: `172.237.44.29`
+- **Backend Port**: `5000`
+- **API URL**: `http://172.237.44.29:5000/api`
+- **Health Check**: `http://172.237.44.29:5000/health`
+
 ## 🔧 Solution Steps
 
-### Step 1: Get Your Backend URL
-First, you need to know where your backend is running:
-
-**Option A: Domain Name**
-```
-https://yourdomain.com
-```
-
-**Option B: Server IP Address**
-```
-http://123.456.789.123:5000
-```
-
-**Option C: Cloud Service URL**
-```
-https://your-app.herokuapp.com
-https://your-app.railway.app
-```
-
-### Step 2: Configure Environment Variables in Vercel
+### Step 1: Configure Environment Variables in Vercel
 
 1. **Go to Vercel Dashboard**
    - Visit https://vercel.com/dashboard
@@ -35,25 +22,15 @@ https://your-app.railway.app
    - Click on "Environment Variables"
 
 3. **Add Environment Variables**
-   Add these variables:
+   Add this variable:
 
    ```
    Name: VITE_API_BASE_URL
-   Value: http://YOUR_BACKEND_URL:5000/api
+   Value: http://172.237.44.29:5000/api
    Environment: Production, Preview, Development
    ```
 
-   ```
-   Name: VITE_SITE_NAME
-   Value: Nepal Movie
-   Environment: Production, Preview, Development
-   ```
-
-   **Example Values:**
-   - If backend on domain: `https://api.yourdomain.com/api`
-   - If backend on IP: `http://123.456.789.123:5000/api`
-
-### Step 3: Redeploy Frontend
+### Step 2: Redeploy Frontend
 
 After adding environment variables:
 
@@ -66,7 +43,7 @@ After adding environment variables:
    ```bash
    cd Frontend
    git add .
-   git commit -m "Update environment variables for production"
+   git commit -m "Update backend URL to production IP"
    git push origin main
    ```
 
@@ -83,23 +60,26 @@ origin: [
 
 ## 🧪 Testing the Connection
 
-### Method 1: Browser Console
+### Method 1: Test Backend Directly
+```bash
+# Test if backend is accessible
+curl http://172.237.44.29:5000/health
+
+# Test API endpoint
+curl http://172.237.44.29:5000/api/movies
+```
+
+### Method 2: Use Test Script
+```bash
+cd Frontend
+node test-backend.js
+```
+
+### Method 3: Browser Console
 1. Open https://nepalmovie.vercel.app
 2. Open browser developer tools (F12)
 3. Check console for API connection logs
-4. Look for: `🔗 API Base URL: http://your-backend-url:5000/api`
-
-### Method 2: Network Tab
-1. Open developer tools
-2. Go to "Network" tab
-3. Refresh the page
-4. Look for API calls to your backend URL
-
-### Method 3: Direct API Test
-Test your backend API directly:
-```bash
-curl http://YOUR_BACKEND_URL:5000/health
-```
+4. Look for: `🔗 API Base URL: http://172.237.44.29:5000/api`
 
 ## 🔍 Troubleshooting
 
@@ -141,31 +121,27 @@ curl http://YOUR_BACKEND_URL:5000/health
 - [ ] CORS is configured on backend (already done)
 - [ ] Browser cache cleared
 
-## 🚀 Example Configuration
+## 🚀 Quick Fix Summary
 
-### If your backend runs on IP `192.168.1.100`:
+**Your specific configuration:**
 
-**Vercel Environment Variable:**
-```
-VITE_API_BASE_URL = http://192.168.1.100:5000/api
-```
+1. **Vercel Environment Variable:**
+   ```
+   VITE_API_BASE_URL = http://172.237.44.29:5000/api
+   ```
 
-**Test backend accessibility:**
-```bash
-curl http://192.168.1.100:5000/health
-```
+2. **Test backend accessibility:**
+   ```bash
+   curl http://172.237.44.29:5000/health
+   ```
 
-### If your backend runs on domain `api.yourdomain.com`:
-
-**Vercel Environment Variable:**
-```
-VITE_API_BASE_URL = https://api.yourdomain.com/api
-```
-
-**Test backend accessibility:**
-```bash
-curl https://api.yourdomain.com/health
-```
+3. **Expected response:**
+   ```json
+   {
+     "success": true,
+     "message": "Server is running"
+   }
+   ```
 
 ## 📞 Need Help?
 
