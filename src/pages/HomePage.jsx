@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import MovieSlider from '../components/MovieSlider';
 import MovieCard from '../components/MovieCard';
 import AdBanner from '../components/AdBanner';
+import AdDebugger from '../components/AdDebugger';
 import Footer from '../components/Footer';
 import ConnectionTest from '../components/ConnectionTest';
 import { movieAPI } from '../services/api';
@@ -200,6 +201,13 @@ const HomePage = () => {
             </div>
           </section>
         )}
+
+        {/* Ads Debug Panel - Always show for now */}
+        <section className="px-4 sm:px-6 lg:px-8 mb-6">
+          <div className="max-w-7xl mx-auto">
+            <AdDebugger />
+          </div>
+        </section>
         
         {/* Hero Section - Newly Added Movies Slider - Only show if no search */}
         {!searchQuery && (
