@@ -6,7 +6,8 @@ const AdBanner = ({ position = 'top', className = '' }) => {
   const [ads, setAds] = useState([]);
   const [currentAd, setCurrentAd] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
-  const [adType, setAdType] = useState('banner'); // 'banner' or 'code'
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAds();
@@ -14,102 +15,51 @@ const AdBanner = ({ position = 'top', className = '' }) => {
 
   const fetchAds = async () => {
     try {
-      const response = await adsAPI.getAll();
-      const filteredAds = response.data.data.filter(ad => ad.position === position && ad.enabled);
+      setLoading(true);
+      setError(null);
+      
+      // First try to get ads by position
+      const response = await adsAPI.getAdsByPosition(position);
+      let filteredAds = response.data.data || [];
+      
+      // Filter for active ads only
+      filteredAds = filteredAds.filter(ad => ad.is_active === true || ad.is_active === 1);
+      
+      console.log(`Found ${filteredAds.length} active ads for position: ${position}`, filteredAds);
+      
       setAds(filteredAds);
       
       if (filteredAds.length > 0) {
-        setCurrentAd(filteredAds[0]);
-        // Determine ad type based on content
-        if (filteredAds[0].ad_code && filteredAds[0].ad_code.trim()) {
-          setAdType('code');
-        } else {
-          setAdType('banner');
-        }
+        // Select random ad if multiple exist
+        const randomAd = filteredAds[Math.floor(Math.random() * filteredAds.length)];
+        setCurrentAd(randomAd);
+        console.log('Selected ad:', randomAd);
+      } else {
+        console.log(`No active ads found for position: ${position}`);
+        setCurrentAd(null);
       }
     } catch (error) {
       console.error('Error fetching ads:', error);
-      // Fallback to Adstera ads
-      setAdsteraAds();
-    }
-  };
-
-  const setAdsteraAds = () => {
-    const adsteraAds = {
-      top: {
-        id: 'adstera-top',
-        name: 'Adstera Top Banner',
-        ad_code: `
-          <script type="text/javascript">
-            atOptions = {
-              'key' : 'your-adstera-key-here',
-              'format' : 'iframe',
-              'height' : 90,
-              'width' : 728,
-              'params' : {}
-            };
-            document.write('<scr' + 'ipt type="text/javascript" src="//www.topcreativeformat.com/your-adstera-key-here/invoke.js"></scr' + 'ipt>');
-          </script>
-        `,
-        position: 'top',
-        enabled: true
-      },
-      sidebar: {
-        id: 'adstera-sidebar',
-        name: 'Adstera Sidebar',
-        ad_code: `
-          <script type="text/javascript">
-            atOptions = {
-              'key' : 'your-adstera-sidebar-key-here',
-              'format' : 'iframe',
-              'height' : 250,
-              'width' : 300,
-              'params' : {}
-            };
-            document.write('<scr' + 'ipt type="text/javascript" src="//www.topcreativeformat.com/your-adstera-sidebar-key-here/invoke.js"></scr' + 'ipt>');
-          </script>
-        `,
-        position: 'sidebar',
-        enabled: true
-      },
-      bottom: {
-        id: 'adstera-bottom',
-        name: 'Adstera Bottom Banner',
-        ad_code: `
-          <script type="text/javascript">
-            atOptions = {
-              'key' : 'your-adstera-bottom-key-here',
-              'format' : 'iframe',
-              'height' : 90,
-              'width' : 728,
-              'params' : {}
-            };
-            document.write('<scr' + 'ipt type="text/javascript" src="//www.topcreativeformat.com/your-adstera-bottom-key-here/invoke.js"></scr' + 'ipt>');
-          </script>
-        `,
-        position: 'bottom',
-        enabled: true
-      }
-    };
-
-    if (adsteraAds[position]) {
-      setCurrentAd(adsteraAds[position]);
-      setAdType('code');
+      setError(error.message);
+      setCurrentAd(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAdClick = () => {
-    if (currentAd?.redirect_link) {
+    if (currentAd?.link_url) {
       // Track ad click
       trackAdClick();
-      window.open(currentAd.redirect_link, '_blank');
+      window.open(currentAd.link_url, '_blank');
     }
   };
 
   const trackAdClick = async () => {
     try {
-      if (currentAd?.id && typeof currentAd.id === 'number') {
+      if (currentAd?.id) {
         await adsAPI.trackClick(currentAd.id);
+        console.log('Ad click tracked:', currentAd.id);
       }
     } catch (error) {
       console.error('Error tracking ad click:', error);
@@ -118,8 +68,9 @@ const AdBanner = ({ position = 'top', className = '' }) => {
 
   const trackAdImpression = async () => {
     try {
-      if (currentAd?.id && typeof currentAd.id === 'number') {
+      if (currentAd?.id) {
         await adsAPI.trackImpression(currentAd.id);
+        console.log('Ad impression tracked:', currentAd.id);
       }
     } catch (error) {
       console.error('Error tracking ad impression:', error);
@@ -127,20 +78,36 @@ const AdBanner = ({ position = 'top', className = '' }) => {
   };
 
   useEffect(() => {
-    if (currentAd && isVisible) {
-      trackAdImpression();
+    if (currentAd && isVisible && !loading) {
+      // Track impression after a short delay to ensure ad is visible
+      const timer = setTimeout(() => {
+        trackAdImpression();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [currentAd, isVisible]);
+  }, [currentAd, isVisible, loading]);
 
   const handleClose = () => {
     setIsVisible(false);
   };
 
-  if (!currentAd || !isVisible) {
+  // Don't render anything if loading, error, no ad, or not visible
+  if (loading) {
+    return (
+      <div className={`${getAdStyles()} ${className}`}>
+        <div className="bg-dark-light rounded-lg border border-dark-lighter p-4 animate-pulse">
+          <div className="bg-dark rounded h-20"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !currentAd || !isVisible) {
     return null;
   }
 
-  const getAdStyles = () => {
+  function getAdStyles() {
     switch (position) {
       case 'top':
         return 'w-full max-w-4xl mx-auto min-h-[90px]';
@@ -148,10 +115,12 @@ const AdBanner = ({ position = 'top', className = '' }) => {
         return 'w-full max-w-xs min-h-[250px]';
       case 'bottom':
         return 'w-full max-w-4xl mx-auto min-h-[90px]';
+      case 'player':
+        return 'w-full max-w-2xl mx-auto min-h-[60px]';
       default:
         return 'w-full min-h-[90px]';
     }
-  };
+  }
 
   return (
     <div className={`relative ${getAdStyles()} ${className}`}>
@@ -160,27 +129,41 @@ const AdBanner = ({ position = 'top', className = '' }) => {
         <button
           onClick={handleClose}
           className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          title="Close ad"
         >
           <X className="w-4 h-4" />
         </button>
 
-        {/* Ad content */}
-        {adType === 'code' ? (
+        {/* Ad content based on type */}
+        {currentAd.type === 'code' ? (
           <div 
             className="w-full h-full flex items-center justify-center p-4"
-            dangerouslySetInnerHTML={{ __html: currentAd.ad_code }}
+            dangerouslySetInnerHTML={{ __html: currentAd.content }}
           />
-        ) : (
+        ) : currentAd.type === 'banner' ? (
           <div
             onClick={handleAdClick}
             className="w-full h-full cursor-pointer overflow-hidden"
           >
-            <img
-              src={currentAd.image_url}
-              alt={currentAd.name}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-              onLoad={trackAdImpression}
-            />
+            {currentAd.image_url ? (
+              <img
+                src={currentAd.image_url}
+                alt={currentAd.name || 'Advertisement'}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  console.error('Ad image failed to load:', currentAd.image_url);
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-primary to-red-600 flex items-center justify-center text-white">
+                <span className="text-lg font-semibold">{currentAd.name || 'Advertisement'}</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="w-full h-full bg-dark flex items-center justify-center text-gray-400">
+            <span>Unsupported ad type: {currentAd.type}</span>
           </div>
         )}
 
@@ -188,6 +171,13 @@ const AdBanner = ({ position = 'top', className = '' }) => {
         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
           Ad
         </div>
+
+        {/* Ad info (only visible on hover in development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            {currentAd.name} ({currentAd.type})
+          </div>
+        )}
       </div>
     </div>
   );
