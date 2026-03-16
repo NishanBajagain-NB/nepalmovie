@@ -197,6 +197,11 @@ const MoviePlayerPage = () => {
                 </div>
               </div>
 
+              {/* Player Ad */}
+              <div className="mb-6">
+                <AdBanner position="player" />
+              </div>
+
               {/* Movie Details */}
               <div className="bg-dark-light rounded-lg p-6">
                 <h1 className="text-3xl font-bold text-white mb-4">{movie.name}</h1>
