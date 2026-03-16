@@ -11,6 +11,7 @@ import NotFoundPage from './pages/NotFoundPage';
 
 // Components
 import StartupPopup from './components/StartupPopup';
+import PopunderAd from './components/PopunderAd';
 
 function App() {
   const [showPopup, setShowPopup] = useState(false);
@@ -32,6 +33,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-dark text-white">
         {showPopup && <StartupPopup onClose={handleClosePopup} />}
+        <PopunderAd />
         
         <Routes>
           {/* User Routes */}
