@@ -25,12 +25,12 @@
     }
   ],
   "env": {
-    "VITE_API_BASE_URL": "http://172.237.44.29:5000/api",
+    "VITE_API_BASE_URL": "https://backend.nishanbajagain.com.np/api",
     "VITE_SITE_NAME": "Nepal Movie"
   },
   "build": {
     "env": {
-      "VITE_API_BASE_URL": "http://172.237.44.29:5000/api",
+      "VITE_API_BASE_URL": "https://backend.nishanbajagain.com.np/api",
       "VITE_SITE_NAME": "Nepal Movie"
     }
   }
